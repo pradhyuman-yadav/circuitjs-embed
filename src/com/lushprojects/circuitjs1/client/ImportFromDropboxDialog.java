@@ -1,3 +1,4 @@
+// Modified November 2026 for the circuitjs-embed project; see README.md for the changes.
 package com.lushprojects.circuitjs1.client;
 
 import java.util.Date;

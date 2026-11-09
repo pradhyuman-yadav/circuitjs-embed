@@ -7,7 +7,7 @@ runs the GWT compiler. Output goes to war/circuitjs1/.
 Usage:
     python tools/build_gwt.py            # full optimized build
     python tools/build_gwt.py --draft    # faster build with less optimization
-    python tools/build_gwt.py --embed    # single-file version in .tmp/embed-dist
+    python tools/build_gwt.py --embed    # embed version in dist/embed
 """
 import argparse
 import hashlib
@@ -42,7 +42,13 @@ GWT_JARS = [
 ]
 GWT_MODULE = "com.lushprojects.circuitjs1.circuitjs1"
 EMBED_MODULE = "com.lushprojects.circuitjs1.circuitjs1embed"
-EMBED_DIST = TMP / "embed-dist"
+EMBED_DIST = ROOT / "dist" / "embed"
+EMBED_SCRIPT = "circuitjs1embed.nocache.js"
+EMBED_NOTICE = (
+    "/* CircuitJS1 by Paul Falstad and Iain Sharp, modified in the circuitjs-embed project. "
+    "Free software under the GNU GPL version 2 or later; see COPYING.txt. "
+    "Source: https://github.com/pradhyuman-yadav/circuitjs-embed */\n"
+)
 JDK_API = (
     "https://api.adoptium.net/v3/assets/latest/8/hotspot"
     "?architecture=x64&image_type=jdk&vendor=eclipse&os={os}"
@@ -119,7 +125,7 @@ def ensure_gwt() -> Path:
 
 
 def package_embed() -> None:
-    """Collect the files a host page needs into .tmp/embed-dist."""
+    """Collect the files a host page needs into dist/embed."""
     compiled = TMP / "embed-war" / "circuitjs1embed"
     shutil.rmtree(EMBED_DIST, ignore_errors=True)
     shutil.copytree(
@@ -133,6 +139,9 @@ def package_embed() -> None:
     if not styles:
         sys.exit("No <style> block found in war/circuitjs.html")
     (EMBED_DIST / "embed.css").write_text(styles.group(1), encoding="utf-8")
+    shutil.copy(ROOT / "COPYING.txt", EMBED_DIST / "COPYING.txt")
+    script = EMBED_DIST / EMBED_SCRIPT
+    script.write_bytes(EMBED_NOTICE.encode("utf-8") + script.read_bytes())
     print(f"Embed files: {EMBED_DIST}")
 
 

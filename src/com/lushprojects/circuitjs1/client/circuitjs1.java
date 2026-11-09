@@ -17,6 +17,7 @@
     along with CircuitJS1.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Modified November 2026 for the circuitjs-embed project; see README.md for the changes.
 package com.lushprojects.circuitjs1.client;
 
 import java.util.HashMap;

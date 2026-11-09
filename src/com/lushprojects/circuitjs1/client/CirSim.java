@@ -17,6 +17,7 @@
     along with CircuitJS1.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Modified November 2026 for the circuitjs-embed project; see README.md for the changes.
 package com.lushprojects.circuitjs1.client;
 
 // GWT conversion (c) 2015 by Iain Sharp
@@ -2587,6 +2588,23 @@ MouseOutHandler, MouseWheelHandler {
     boolean converged;
     int subIterations;
     
+    // When set, runCircuit ignores real time and steps until simulated time
+    // reaches runTarget or the wall clock reaches runDeadline.
+    boolean runToTarget = false;
+    double runTarget;
+    long runDeadline;
+
+    void runUntil(double target, long deadline) {
+	runTarget = target;
+	runDeadline = deadline;
+	runToTarget = true;
+	try {
+	    runCircuit(false);
+	} finally {
+	    runToTarget = false;
+	}
+    }
+
     void runCircuit(boolean didAnalyze) {
 	if (circuitMatrix == null || elmList.size() == 0) {
 	    circuitMatrix = null;
@@ -2599,14 +2617,14 @@ MouseOutHandler, MouseWheelHandler {
 	long steprate = (long) (160*getIterCount());
 	long tm = System.currentTimeMillis();
 	long lit = lastIterTime;
-	if (lit == 0) {
+	if (lit == 0 && !runToTarget) {
 	    lastIterTime = tm;
 	    return;
 	}
 	
 	// Check if we don't need to run simulation (for very slow simulation speeds).
 	// If the circuit changed, do at least one iteration to make sure everything is consistent.
-	if (1000 >= steprate*(tm-lastIterTime) && !didAnalyze)
+	if (1000 >= steprate*(tm-lastIterTime) && !didAnalyze && !runToTarget)
 	    return;
 	
 	boolean delayWireProcessing = canDelayWireProcessing();
@@ -2735,6 +2753,11 @@ MouseOutHandler, MouseWheelHandler {
 		
 	    tm = System.currentTimeMillis();
 	    lit = tm;
+	    if (runToTarget) {
+		if (t >= runTarget || tm > runDeadline)
+		    break;
+		continue;
+	    }
 	    // Check whether enough time has elapsed to perform an *additional* iteration after
 	    // those we have already completed.
 	    if ((timeStepCount-timeStepCountAtFrameStart)*1000 >= steprate*(tm-lastIterTime) || (tm-lastFrameTime > 500))

@@ -3,6 +3,7 @@
 <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
   <button id="ask">Ask Claude about these readings ↗</button>
   <span id="status" style="font-size:13px;color:var(--text-secondary)">Loading simulator</span>
+  <a href="https://github.com/pradhyuman-yadav/circuitjs-embed" style="font-size:13px;margin-left:auto">CircuitJS1, GPL, source</a>
 </div>
 <script>
 var CDN = "__CDN__";
@@ -11,28 +12,26 @@ var frame = document.getElementById("sim");
 var statusLine = document.getElementById("status");
 var config = JSON.stringify({circuit: circuit, options: "hideMenu=true"}).replace(/</g, "\\u003c");
 var bridge = "window.CircuitJSEmbed=" + config + ";" +
-  "window.CircuitJSEmbed.onReady=function(){parent.postMessage({type:'circuitjs-ready'},'*')};" +
-  "addEventListener('message',function(e){if(e.data==='circuitjs-measure')parent.postMessage({type:'circuitjs-readings',data:CircuitJS1.measure()},'*')});";
+  "window.CircuitJSEmbed.onReady=function(api){parent.postMessage({type:'circuitjs-ready',skippedLines:api.measure().skippedLines},'*')};" +
+  "addEventListener('message',function(e){if(e.data==='circuitjs-measure'&&window.CircuitJS1)parent.postMessage({type:'circuitjs-readings',data:CircuitJS1.measure()},'*')});";
 frame.srcdoc = "<!doctype html><html><head><meta charset='utf-8'>" +
   "<link rel='stylesheet' href='" + CDN + "/embed.css'>" +
   "<script>" + bridge + "<\/script></head><body>" +
   "<script src='" + CDN + "/circuitjs1embed.nocache.js'><\/script></body></html>";
 
-function formatValue(value, unit) {
-  return value === null ? "n/a" : value.toPrecision(4) + " " + unit;
-}
-
 function describeReadings(state) {
   var parts = state.elements.map(function (element) {
-    return (element.name || "element") + ": " + formatValue(element.voltage, "V") + ", " + formatValue(element.current, "A");
+    return "#" + element.index + " " + (element.name || "element") + " (" + element.info.join(", ") + ")";
   });
-  var summary = "My live CircuitJS readings at t = " + state.time.toPrecision(4) + " s. " + parts.join("; ") + ".";
+  var summary = "My live CircuitJS readings at t = " + state.time.toPrecision(4) + " s, " +
+    (state.running ? "running" : "paused") + ". " + parts.join("; ") + ".";
   return state.error ? summary + " Simulator error: " + state.error + "." : summary;
 }
 
 addEventListener("message", function (event) {
   if (event.source !== frame.contentWindow || !event.data) return;
-  if (event.data.type === "circuitjs-ready") statusLine.textContent = "";
+  if (event.data.type === "circuitjs-ready")
+    statusLine.textContent = event.data.skippedLines ? event.data.skippedLines + " circuit lines could not be read" : "";
   if (event.data.type === "circuitjs-readings") sendPrompt(describeReadings(event.data.data));
 });
 

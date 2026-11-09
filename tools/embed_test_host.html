@@ -22,7 +22,7 @@ async function start() {
   var template = await (await fetch("/tools/embed_widget_template.html")).text();
   var circuit = await (await fetch("/war/circuitjs1/circuits/lrc.txt")).text();
   var fragment = template
-    .replace("__CDN__", origin + "/.tmp/embed-dist")
+    .replace("__CDN__", origin + "/dist/embed")
     .replace("__CIRCUIT_JSON__", JSON.stringify(circuit));
   document.getElementById("widget").srcdoc =
     '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="' + csp + '">' +

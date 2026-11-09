@@ -97,9 +97,9 @@ Thanks to @Immortalin for the initial work in applying Electron to CircuitJS1.
 
 This repository is a modified copy of [CircuitJS1](https://github.com/sharpie7/circuitjs1) by Paul Falstad and Iain Sharp, changed in November 2026. The changes are:
 
-* `window.CircuitJS1`, a JavaScript API with `load`, `exportCircuit`, `measure` and `setRunning`.
-* A single-file build for embedding, published in `dist/embed`. A host page sets `window.CircuitJSEmbed = {circuit, options, onReady}` before loading `circuitjs1embed.nocache.js`.
-* Failed Dropbox imports now show an error and leave the current circuit in place.
+* `window.CircuitJS1`, a JavaScript API with `load`, `exportCircuit`, `measure`, `setRunning` and `simulate`. `simulate({circuit, duration, samples})` runs for a span of simulated time and returns waveforms. Voltage, current and power are `null` for parts with more than two terminals; use `posts` and `info` for those.
+* A build for embedding, published in `dist/embed`. A host page links `embed.css`, sets `window.CircuitJSEmbed = {circuit, options, onReady}`, then loads `circuitjs1embed.nocache.js`. The other files in that folder must be served beside them.
+* Dropbox imports that fail to download now show an error and leave the current circuit in place. A download that succeeds is still read as a circuit, whatever it contains.
 * `tools/build_gwt.py` builds the project from the command line, without Eclipse. Add `--embed` for the single-file version.
 
 ## License
