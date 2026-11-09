@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Embed sandbox test</title>
+<body style="margin:0">
+<iframe id="widget" sandbox="allow-scripts" style="width:680px;height:520px;border:0"></iframe>
+<script>
+window.prompts = [];
+addEventListener("message", function (event) {
+  if (event.data && event.data.prompt) window.prompts.push(event.data.prompt);
+});
+
+async function start() {
+  var origin = location.origin;
+  var sandbox = new URLSearchParams(location.search).get("sandbox");
+  if (sandbox) document.getElementById("widget").setAttribute("sandbox", sandbox.replace(/,/g, " "));
+  var csp = "default-src 'none'; script-src 'unsafe-inline' " + origin +
+    "; style-src 'unsafe-inline' " + origin + "; img-src data: " + origin +
+    "; font-src " + origin + "; connect-src 'none'" +
+    (new URLSearchParams(location.search).get("frames") === "open" ? "" : "; frame-src 'none'");
+  if (new URLSearchParams(location.search).get("frames") === "open")
+    csp = csp.replace("default-src 'none'", "default-src 'none'; frame-src * about: data: blob:");
+  var template = await (await fetch("/tools/embed_widget_template.html")).text();
+  var circuit = await (await fetch("/war/circuitjs1/circuits/lrc.txt")).text();
+  var fragment = template
+    .replace("__CDN__", origin + "/.tmp/embed-dist")
+    .replace("__CIRCUIT_JSON__", JSON.stringify(circuit));
+  document.getElementById("widget").srcdoc =
+    '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="' + csp + '">' +
+    "<style>.sr-only{display:none}</style><script>window.sendPrompt=function(m){parent.postMessage({prompt:m},'*')};" +
+    "onerror=function(m,s,l){parent.postMessage({prompt:'ERROR '+m+' line '+l},'*')};" +
+    "document.addEventListener('securitypolicyviolation',function(e){parent.postMessage({prompt:'CSP '+e.violatedDirective+' '+e.blockedURI},'*')});<\/script>" + fragment +
+    "<script>setTimeout(function(){parent.postMessage({prompt:'STATE srcdoc='+document.getElementById('sim').srcdoc.length+' status='+document.getElementById('status').textContent+' docs='+window.frames.length},'*')},3000)<\/script>";
+}
+start();
+</script>

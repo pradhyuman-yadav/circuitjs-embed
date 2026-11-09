@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Single-file build of the simulator for embedding in other pages. -->
+<module rename-to="circuitjs1embed">
+    <inherits name="com.lushprojects.circuitjs1.circuitjs1" />
+    <collapse-all-properties />
+    <add-linker name="sso" />
+</module>
